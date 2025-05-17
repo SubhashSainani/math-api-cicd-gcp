@@ -9,7 +9,7 @@ class TestMathFunctions(unittest.TestCase):
         self.assertEqual(add_numbers(0, 0), 0)
 
     def test_add_numbers_failure(self):
-        """This test was fixed to passs."""
+        """This test was fixed to pass."""
         self.assertEqual(add_numbers(2, 2), 4)
 
     def test_multiply_numbers_success(self):
