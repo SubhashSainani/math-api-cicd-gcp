@@ -92,5 +92,4 @@ images:
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/flask-apps/flask-app:$COMMIT_SHA'
 
 options:
-  logging: 'CLOUD_LOGGING_ONLY'  # Changed from 'NONE' to get better logs
-  dynamic_substitutions: true  # Ensure variables are correctly substituted
+  logging: 'NONE'  
