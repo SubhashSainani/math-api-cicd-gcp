@@ -10,24 +10,30 @@ steps:
         cd app
         python -m unittest discover
 
-  # Step 2: Configure Docker authentication for Container Registry
+  # Step 2: Configure Docker authentication for Artifact Registry
   - name: 'gcr.io/cloud-builders/gcloud'
     id: 'docker-auth'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        gcloud auth configure-docker --quiet
+        # Make sure we're correctly authenticated
+        gcloud config set project sit707-25t1-subhash-738d57d
+        gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+        
+        # Print current identity for debugging
+        echo "Current identity:"
+        gcloud auth list
 
   # Step 3: Build the container image
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-image'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/flask-app:$COMMIT_SHA', '.']
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/sit707-25t1-subhash-738d57d/flask-apps/flask-app:latest', '.']
 
-  # Step 4: Push the container image to Container Registry
+  # Step 4: Push the container image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     id: 'push-image'
-    args: ['push', 'gcr.io/$PROJECT_ID/flask-app:$COMMIT_SHA']
+    args: ['push', 'us-central1-docker.pkg.dev/sit707-25t1-subhash-738d57d/flask-apps/flask-app:latest']
 
   # Step 5: Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -38,7 +44,7 @@ steps:
       - 'deploy'
       - 'flask-app'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/flask-app:$COMMIT_SHA'
+      - 'us-central1-docker.pkg.dev/sit707-25t1-subhash-738d57d/flask-apps/flask-app:latest'
       - '--region'
       - 'us-central1'
       - '--platform'
@@ -46,7 +52,7 @@ steps:
       - '--allow-unauthenticated'
 
 images:
-  - 'gcr.io/$PROJECT_ID/flask-app:$COMMIT_SHA'
+  - 'us-central1-docker.pkg.dev/sit707-25t1-subhash-738d57d/flask-apps/flask-app:latest'
 
 options:
   logging: 'NONE'
