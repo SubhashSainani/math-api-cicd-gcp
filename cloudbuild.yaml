@@ -38,7 +38,3 @@ steps:
 
 images:
   - 'gcr.io/$PROJECT_ID/flask-app:$COMMIT_SHA'
-
-options:
-  logging: GCS_ONLY
-  logsBucket: 'gs://my-build-logs-707bucket'
