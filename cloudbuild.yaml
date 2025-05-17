@@ -10,15 +10,18 @@ steps:
         cd app
         python -m unittest discover
 
-  # Step 2: Build and push the container image with kaniko
-  - name: 'gcr.io/kaniko-project/executor:latest'
-    id: 'build-and-push'
-    args:
-      - --destination=us-central1-docker.pkg.dev/$PROJECT_ID/flask-apps/flask-app:$COMMIT_SHA
-      - --context=.
-      - --cache=true
+  # Step 2: Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-image'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/flask-app:$SHORT_SHA', '.']
 
-  # Step 3: Deploy container image to Cloud Run
+  # Step 3: Push the container image to Container Registry
+  # The built-in service account for Cloud Build should have permissions for this
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-image'
+    args: ['push', 'gcr.io/$PROJECT_ID/flask-app:$SHORT_SHA']
+
+  # Step 4: Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy-to-cloud-run'
     entrypoint: gcloud
@@ -27,7 +30,7 @@ steps:
       - 'deploy'
       - 'flask-app'
       - '--image'
-      - 'us-central1-docker.pkg.dev/$PROJECT_ID/flask-apps/flask-app:$COMMIT_SHA'
+      - 'gcr.io/$PROJECT_ID/flask-app:$SHORT_SHA'
       - '--region'
       - 'us-central1'
       - '--platform'
@@ -35,7 +38,7 @@ steps:
       - '--allow-unauthenticated'
 
 images:
-  - 'us-central1-docker.pkg.dev/$PROJECT_ID/flask-apps/flask-app:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/flask-app:$SHORT_SHA'
 
 options:
   logging: 'NONE'
