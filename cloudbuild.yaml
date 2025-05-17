@@ -10,26 +10,15 @@ steps:
         cd app
         python -m unittest discover
 
-  # Step 2: Configure Docker to authenticate with Artifact Registry
-  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
-    id: 'docker-auth'
-    entrypoint: 'bash'
+  # Step 2: Build and push the container image with kaniko
+  - name: 'gcr.io/kaniko-project/executor:latest'
+    id: 'build-and-push'
     args:
-      - '-c'
-      - |
-        gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+      - --destination=us-central1-docker.pkg.dev/$PROJECT_ID/flask-apps/flask-app:$COMMIT_SHA
+      - --context=.
+      - --cache=true
 
-  # Step 3: Build the container image
-  - name: 'gcr.io/cloud-builders/docker'
-    id: 'build-image'
-    args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/flask-apps/flask-app:$COMMIT_SHA', '.']
-
-  # Step 4: Push the container image to Artifact Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    id: 'push-image'
-    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/flask-apps/flask-app:$COMMIT_SHA']
-
-  # Step 5: Deploy container image to Cloud Run
+  # Step 3: Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy-to-cloud-run'
     entrypoint: gcloud
