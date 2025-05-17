@@ -10,17 +10,16 @@ steps:
         cd app
         python -m unittest discover
 
-  # Step 2: Build the container image
-  - name: 'gcr.io/cloud-builders/docker'
-    id: 'build-image'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/flask-app:latest', '.']
+  # Step 2: Build and push the image in one step using Google's builder
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'build-and-push'
+    entrypoint: /bin/bash
+    args:
+      - '-c'
+      - |
+        gcloud builds submit --tag gcr.io/$PROJECT_ID/flask-app:latest .
 
-  # Step 3: Push the container image to Container Registry
-  - name: 'gcr.io/cloud-builders/docker'
-    id: 'push-image'
-    args: ['push', 'gcr.io/$PROJECT_ID/flask-app:latest']
-
-  # Step 4: Deploy container image to Cloud Run
+  # Step 3: Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy-to-cloud-run'
     entrypoint: gcloud
@@ -36,8 +35,5 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
 
-images:
-  - 'gcr.io/$PROJECT_ID/flask-app:latest'
-
 options:
-  logging: 'CLOUD_LOGGING_ONLY'
+  logging: 'NONE'
