@@ -42,6 +42,5 @@ images:
   - 'gcr.io/$PROJECT_ID/flask-app:$COMMIT_SHA'
 
 options:
-  serviceAccount: '445036065898@cloudbuild.gserviceaccount.com'
   logging: GCS_ONLY
   logsBucket: 'gs://my-build-logs-707bucket'
