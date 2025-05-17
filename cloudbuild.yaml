@@ -40,4 +40,4 @@ images:
   - 'gcr.io/$PROJECT_ID/flask-app:latest'
 
 options:
-  logging: 'NONE'
+  logging: 'CLOUD_LOGGING_ONLY'
