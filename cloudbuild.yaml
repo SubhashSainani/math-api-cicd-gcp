@@ -17,20 +17,62 @@ steps:
     args:
       - '-c'
       - |
+        # Print service account info (for debugging)
+        echo "Using service account key file..."
+        
+        # Activate service account
         gcloud auth activate-service-account --key-file=key.json
+        
+        # Configure Docker to use Artifact Registry
         gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+        
+        # Verify authentication worked
+        gcloud auth list
 
-  # Step 3: Build the container image
+  # Step 3: Verify Artifact Registry repository exists
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'verify-repository'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Verifying Artifact Registry repository exists..."
+        if ! gcloud artifacts repositories describe flask-apps --location=us-central1; then
+          echo "Repository does not exist. Creating it now..."
+          gcloud artifacts repositories create flask-apps --repository-format=docker --location=us-central1
+        fi
+        
+        # Verify project ID is set correctly
+        echo "Project ID: $PROJECT_ID"
+
+  # Step 4: Build the container image
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-image'
     args: ['build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/flask-apps/flask-app:$COMMIT_SHA', '.']
 
-  # Step 4: Push the container image to Artifact Registry
+  # Step 5: Push the container image to Artifact Registry with retry logic
   - name: 'gcr.io/cloud-builders/docker'
     id: 'push-image'
-    args: ['push', 'us-central1-docker.pkg.dev/$PROJECT_ID/flask-apps/flask-app:$COMMIT_SHA']
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        # Try pushing with retry logic
+        MAX_RETRIES=3
+        RETRY_COUNT=0
+        
+        until docker push us-central1-docker.pkg.dev/$PROJECT_ID/flask-apps/flask-app:$COMMIT_SHA || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
+          RETRY_COUNT=$((RETRY_COUNT+1))
+          echo "Push failed. Retry $RETRY_COUNT of $MAX_RETRIES..."
+          sleep 10
+        done
+        
+        if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+          echo "Failed to push after $MAX_RETRIES attempts."
+          exit 1
+        fi
 
-  # Step 5: Deploy container image to Cloud Run
+  # Step 6: Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     id: 'deploy-to-cloud-run'
     entrypoint: gcloud
@@ -50,4 +92,5 @@ images:
   - 'us-central1-docker.pkg.dev/$PROJECT_ID/flask-apps/flask-app:$COMMIT_SHA'
 
 options:
-  logging: 'NONE'
+  logging: 'CLOUD_LOGGING_ONLY'  # Changed from 'NONE' to get better logs
+  dynamic_substitutions: true  # Ensure variables are correctly substituted
