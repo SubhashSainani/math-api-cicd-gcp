@@ -13,20 +13,11 @@ steps:
   # Step 2: Configure Docker authentication for Artifact Registry
   - name: 'gcr.io/cloud-builders/gcloud'
     id: 'docker-auth'
-    entrypoint: 'bash'
     args:
-      - '-c'
-      - |
-        # Make sure we're correctly authenticated
-        gcloud config set project sit707-25t1-subhash-738d57d
-        gcloud auth configure-docker australia-southeast2-docker.pkg.dev --quiet
-        
-        # Print current identity for debugging
-        echo "Current identity:"
-        gcloud auth list
-        
-        # Explicitly get credentials for Artifact Registry
-        gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://australia-southeast2-docker.pkg.dev
+      - 'auth'
+      - 'configure-docker'
+      - 'australia-southeast2-docker.pkg.dev'
+      - '--quiet'
 
   # Step 3: Build the container image
   - name: 'gcr.io/cloud-builders/docker'
