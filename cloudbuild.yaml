@@ -25,3 +25,7 @@ steps:
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
+
+# Add this options section
+options:
+  default_logs_bucket_behavior: REGIONAL_USER_OWNED_BUCKET
