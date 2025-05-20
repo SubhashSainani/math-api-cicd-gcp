@@ -9,8 +9,8 @@ class TestMathFunctions(unittest.TestCase):
         self.assertEqual(add_numbers(0, 0), 0)
 
     def test_add_numbers_failure(self):
-        """This test was fixed to passs."""
-        self.assertEqual(add_numbers(2, 2), 4)
+        """This test is designed to fail."""
+        self.assertEqual(add_numbers(2, 2), 5)  # Intentional failure
 
     def test_multiply_numbers_success(self):
         """Test that the multiply_numbers function works correctly."""
