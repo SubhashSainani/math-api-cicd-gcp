@@ -24,6 +24,9 @@ steps:
         # Print current identity for debugging
         echo "Current identity:"
         gcloud auth list
+        
+        # Explicitly get credentials for Artifact Registry
+        gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pkg.dev
 
   # Step 3: Build the container image
   - name: 'gcr.io/cloud-builders/docker'
@@ -33,7 +36,16 @@ steps:
   # Step 4: Push the container image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     id: 'push-image'
-    args: ['push', 'us-central1-docker.pkg.dev/sit707-25t1-subhash-738d57d/flask-apps/flask-app:latest']
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "Attempting to push image to Artifact Registry..."
+        docker image ls
+        docker push us-central1-docker.pkg.dev/sit707-25t1-subhash-738d57d/flask-apps/flask-app:latest || {
+          echo "Push failed with exit code $?"
+          exit 1
+        }
 
   # Step 5: Deploy container image to Cloud Run
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
@@ -55,4 +67,4 @@ images:
   - 'us-central1-docker.pkg.dev/sit707-25t1-subhash-738d57d/flask-apps/flask-app:latest'
 
 options:
-  logging: 'NONE'
+  logging: 'CLOUD_LOGGING_ONLY'
