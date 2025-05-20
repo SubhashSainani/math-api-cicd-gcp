@@ -16,13 +16,13 @@ steps:
     args:
       - 'auth'
       - 'configure-docker'
-      - 'australia-southeast2-docker.pkg.dev'
+      - 'us-central1-docker.pkg.dev'
       - '--quiet'
 
   # Step 3: Build the container image
   - name: 'gcr.io/cloud-builders/docker'
     id: 'build-image'
-    args: ['build', '-t', 'australia-southeast2-docker.pkg.dev/sit707-25t1-subhash-738d57d/flask-apps/flask-app:latest', '.']
+    args: ['build', '-t', 'us-central1-docker.pkg.dev/project-sit707/flask-apps/flask-app:latest', '.']
 
   # Step 4: Push the container image to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
@@ -33,7 +33,7 @@ steps:
       - |
         echo "Attempting to push image to Artifact Registry..."
         docker image ls
-        docker push australia-southeast2-docker.pkg.dev/sit707-25t1-subhash-738d57d/flask-apps/flask-app:latest || {
+        docker push us-central1-docker.pkg.dev/project-sit707/flask-apps/flask-app:latest || {
           echo "Push failed with exit code $?"
           exit 1
         }
@@ -47,15 +47,15 @@ steps:
       - 'deploy'
       - 'flask-app'
       - '--image'
-      - 'australia-southeast2-docker.pkg.dev/sit707-25t1-subhash-738d57d/flask-apps/flask-app:latest'
+      - 'us-central1-docker.pkg.dev/project-sit707/flask-apps/flask-app:latest'
       - '--region'
-      - 'australia-southeast2'
+      - 'us-central1'
       - '--platform'
       - 'managed'
       - '--allow-unauthenticated'
 
 images:
-  - 'australia-southeast2-docker.pkg.dev/sit707-25t1-subhash-738d57d/flask-apps/flask-app:latest'
+  - 'us-central1-docker.pkg.dev/project-sit707/flask-apps/flask-app:latest'
 
 options:
   logging: 'CLOUD_LOGGING_ONLY'
